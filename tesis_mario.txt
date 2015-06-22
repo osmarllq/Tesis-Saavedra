@@ -1,0 +1,727 @@
+\documentclass{article}
+
+\usepackage{selinput}
+\usepackage{amsmath}
+\usepackage{color,graphicx}
+%\DeclareGraphicsExtensions{.bmp,.png}
+\usepackage[spanish]{babel}
+\usepackage{float}    % for fig.pos='H'
+\usepackage{rotfloat} % for sidewaysfigure
+\usepackage[nottoc]{tocbibind}
+\usepackage{hyperref}
+\usepackage{Sweave}
+\usepackage[backend=bibtex, sorting=none]{biblatex}
+
+\bibliography{references}
+
+\begin{filecontents*}{references.bib}
+@book{ShumwayStoffer2006,
+  author = {Robert H. Shumway and David S. Stoffer},
+  title = {Time Series Analysis and Its Applications With R
+ Examples},
+  publisher = {Springer},
+  year = {2013}
+}
+@book{DurbinKoompan2001,
+  author={Durbin, J. and Koopman, S.J.},
+  title={Time Series Analysis by State Space Methods},
+  publisher={Clarendon Press},
+  series={Oxford Statistical Science Series},
+  year={2001}
+}
+@book{Juglar2001,
+  author={Juglar, Clémen},
+  title={Des crises commerciales et de leur retour périodique en France, en Angleterre et aux États-Uni},
+  publisher={Guillaumin et Cie},
+  series={Académie des sciences morales et politiques},
+  year={1862}
+}
+@book{Juglar2001,
+  author={Juglar, Clémen},
+  title={Des crises commerciales et de leur retour périodique en France, en Angleterre et aux États-Uni},
+  publisher={ClaGuillaumin et Cie},
+  year={1862}
+}
+@Article{Gilbert2000,
+    author = {Gilbert y P.D.},
+    year = {2000},
+    title = {A note on the computation of time series model roots},
+    journal = {Applied Economics Letters},
+    volume = {7},
+    pages = {423-424},
+  }
+  @Article{Gilbert1995,
+    author = {Gilbert y P.D.},
+    year = {1995},
+    title = {Combining VAR Estimation and State Space Model Reduction
+      for Simple Good Predictions},
+    journal = {J. of Forecasting: Special Issue on VAR Modelling},
+    volume = {14},
+    pages = {229-250},
+  }
+  @TechReport{Gilbert1999,
+    author = {Gilbert y P.D.},
+    title = {State Space and ARMA Models: An Overview of the
+      Equivalence},
+    institution = {Bank of Canada},
+    address = {Ottawa, Canada},
+    type = {Working Paper},
+    number = {93-4},
+    url =
+      {http://www.bankofcanada.ca/1993/03/publications/research/working-paper-199/},
+    year = {1993},
+  }
+  @Manual{Gilbert2009,
+    title = {Brief User's Guide: Dynamic Systems Estimation},
+    author = {Gilbert y P.D.},
+    year = {2009},
+    url =
+      {http://cran.r-project.org/web/packages/dse/vignettes/dse-guide.pdf},
+  }
+\end{filecontents*}
+
+\begin{document}
+
+\SweaveOpts{concordance=TRUE}
+
+\begin{titlepage}
+
+\begin{center}
+\vspace*{-1in}
+\begin{figure}[htb]
+\begin{center}
+%\includegraphics[width=4cm]{logoUSTA}
+\end{center}
+\end{figure}
+\textbf{UNIVERSIDAD NACIONAL DE COLOMBIA}\\
+\textbf{Facultad de Ciencias Humanas y Económicas}\\
+\vspace*{0.20in}
+\textbf{Escuela de Economía} \\
+\vspace*{0.8in}
+\begin{large}
+
+\end{large}
+\vspace*{0.5in}
+\begin{Large}
+\textbf{Uso de modelos de espacio estado para la estimación del ciclo bancario en Colombia y su interrelación con el ciclo real y de producción industrial} \\
+\end{Large}
+\vspace*{0.3in}
+\begin{large}
+Trabajo de tesis para optar por al título de magíster en ciencias economícas\\
+\end{large}
+\vspace*{0.4in}
+\rule{80mm}{0.1mm}\\
+\vspace*{0.8in}
+
+\begin{large}
+Estudiante: \\
+Mario Gregorio Saavedra Rodríguez \\
+\end{large}
+\vspace*{0.1in}
+\begin{large}
+Director: \\
+Osmar Leandro Loaiza Quintero \\
+\end{large}
+\end{center}
+
+\vspace*{0.4in}
+\begin{large}
+\begin{center}
+Medellín, Colombia\\
+Junio - 2015  \\
+\end{center}
+\end{large}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+\clearpage
+%\title{Uso de modelos de espacio estado para la estimación del ciclo bancario en Colombia y su interrelación con el ciclo real y de producción industrial}
+%\author{Mario Gregorio Saavedra Rodríguez \\ Osmar Leandro Loaiza Quintero}
+%\maketitle\thispagestyle{empty}
+\newpage
+\section*{Agradecimientos}
+A mi esposa Eva, quien confio en mi antes que yo mismo empezara a pensar que esto era posible, a José quién me impulso a hacerlo, a Jairo que ha sido una suerte llegarlo a encontrar en un momento en donde su ayuda hizo posible la elaboración de los modelos y el documento, al Profesor Osmar quien ha dedicado su tiempo a apoyarme y asesorarme en cada paso del camino, y a Abel quién con su conocimiento aportó mucho en la interpretación de los resultados y la construcción de los indicadores
+\newpage
+
+\section*{Autorización para la utilización de los datos}
+Los datos fueron obtenidos de la página de la Superintendencia Financiera de Colombia, el Banco de la República y el DANE; han sido recopilados y estructurados para la construcción de indicadores del sector bancario colombiano con el fin de tomarlos como insumo para la estimación de los modelos de espacio de los estados propuestos.
+\newpage
+
+\section{Introducción}
+
+La actividad económica se manifiesta en periodos de expansión y de contracción, y tiene movimientos oscilatorios que reciben el nombre de ciclos económicos. Los primeros análisis especializados sobre datos reales relativos a la existencia de ciclos económicos se dieron a partir de la segunda mitad del siglo XIX. Fueron los contrapuntos estadísticos a la percepción clásica sobre la imposibilidad de crisis generales de sobreproducción. Destacan en este sentido, estudios llevados a cabo por el francés Clement Juglar (1819 – 1905) que constataron movimientos de duración media (de diez a doce años) bautizados como ciclos Juglar o ciclos comerciales. Más adelante, el ruso Nikolai D. Kondratieff (1892 – 1931) constató la existencia de un segundo tipo de ciclo de mayor duración (50 a 60 años), ciclos a los que también se designan por el nombre de su descubridor. Un tercer tipo de ciclo, en este caso de corta duración, lo puso de manifiesto el británico Joseph Kitchin (1861 – 1932).
+
+Recientemente con la crisis financiera de los Estados Unidos en 2008, el estudio del ciclo financiero ha despertado gran interés por parte de los economistas quienes abordan el tema tratando entre otras cosas de estimar el ciclo económico a través de la duración de los periodos expansivos y recesivos, y su relación con el ciclo real de los negocios, tema este que ha sido bastante estudiado con la expectativa de predecir futuras crisis económicas. Joseph Schumpeter en su libro Capitalismo, socialismo y democracia (1942) uno de los más entusiastas estudiosos del tema aportó a la discusión con su teoría del empresario y la destrucción creativa, consistente básicamente en la exposición de la necesidad inherente de que se dé una recesión para que pueda surtirse un posterior progreso económico, también consideró endógenos los ciclos al mismo sistema económico y unificó los conceptos de: ciclos de corto, mediano y largo plazo.
+
+La definición de un ciclo económico difiere según la metodología abordada de acuerdo con Arthur F. Burns y Wesley C. Mitchell (1946); este último lo explica como una fluctuación en la actividad económica agregada de las naciones que organizan el trabajo en mayor medida a través de empresas de negocios y consistente en expansiones o crecimientos relativamente rápidos, seguidos de periodos de relativo estancamiento denominados contracciones o recesiones, mientras que Burns A. F. lo define como fluctuaciones en la actividad económica agregada.
+Con miras a estudiar el ciclo económico financiero se hizo uso de metodologías como la de los Modelos Dinámicos Lineales (MDL) Kalman (1960) y Kalman y Bucy (1961), así como el uso de la metodología, inicialmente instaurada en los Estados Unidos (1969), CAMEL por sus siglas en inglés (Capital, Asset, Management, Earning and Liquidity) para la elección de las variables a través de las cuales se modelará la evolución del sector financiero para el periodo comprendido entre diciembre de 1996 y diciembre de 2014.
+
+La estimación obtenida de la evolución del ciclo financiero y su relación con la tendencia de la evolución de los sectores real e industrial, medida a través de índices como el IMACO y el IPI, respectivamente, halló como resultado que el sector financiero se afecta por los movimientos cíclicos característicos de los dos sectores en mención, además se realiza un análisis de tipo impulso respuesta con el fin de medir el efecto presentado mediante el análisis realizado y con miras a aportar elementos de juicio para la gestión del riesgo financiero en Colombia.
+
+Diversas metodologias han abordado el análisis y estudio de los ciclos asociados con la economia, entre estas se encuentran aquellas que consideran modelos tales como: CAMEL, PROBIT, LOGIT, VAR y FAVAR entre otros, obteniendose resultados diversos tales como que el ciclo financiero puede tener duración corta o larga, otros concluyeron que el ciclo de los negocios tiene relación con el ciclo financiero, hallando en algunos casos efectos de causalidad en una u otra dirección.
+
+Este trabajo propone la utilización de la metodología de Modelos Dinámicos Lineales (DLM) que toma como insumo variables previamente seleccionadas basadas en el modelo CAMEL, que asocia indicadores del sector bancario en Colombia para el periodo comprendido entre diciembre de 1996 y diciembre de 2014. Los indicadores considerados fueron construidos con base en cifras reportadas oficialmente por los establecimientos bancarios en el PUC (Plan Único de Cuentas) y que hacen referencia al negocio bancario, para  medir su actividad en aspectos tales como respaldo de capital, calidad de sus activos, administración del negocio y rentabilidad.
+
+Recientemente ha cobrado gran importancia el seguimiento de indicadores de instituciones financieras individuales, ya que de ellas se obtiene una visión más detallada de la salud del sector. Dentro de esta categoría se ubica el modelo CAMEL, utilizado para calificar y clasificar establecimientos bancarios. El modelo CAMEL aporta una metodología de identificación de variables de corte microeconómico, que caracterizan la condición de las instituciones financieras en un momento dado. Siendo ésta una de las metodologías mundialmente utilizadas en la actualidad, su estudio y aplicación son coherentes con temas involucrados dentro de las áreas de investigación económica, especialmente en el de la economía financiera
+
+\section{Objetivo general} 
+Implementar  los modelos dinámicos lineales para la modelación del ciclo bancario en colombia y su interrelación con el ciclo real y de producción industrial.
+
+\section{Objetivos específicos} 
+\begin{itemize}
+
+\item Construir indicadores financieros mediante la metodología CAMEL que puedan dar cuenta del ciclo bancario.
+\item Estimar el ciclo bancario mediante la implementación del filtro de Kalman.
+\item Ajustar un modelo estructural que permita modelar simultaneamente la evolución del sector bancario, real y de producción industtrial
+\item Realizar análisis de impulso respuesta con el fin de medir el impacto que tiene cada sector sobre el otro a través de los indicadores considerados.
+\end{itemize}
+
+\section{Revisión literaria}
+
+La literatura existente referente al estudio de los ciclos economicos se centra en el estudio y análisis del ciclo ecónomico específicamente para el sector real, más que en el financiero, sin embargo a raiz de la reciente crisis financiera ocurrida en los Estados Unidos el número de investigaciones dedicadas al ciclo financiero aumentó de manera importante y con diferentes formas de abordar su estudio, encontrándose por lo menos tres enfoques distintos.
+
+En Colombia las investigaciones realizadas derivaron en la construcción de diversos modelos indicadores asociados para medir el comportamiento del sector financiero entre estos el Indicador Financiero Único (IFU) que es un mecanismo de alerta temprana que pretende no sólo resumir, evaluar y organizar jerárquicamente el desempeño de los establecimientos de crédito, sino también establecer un sistema de alertas tempranas que permita predecir con suficiente anticipación la posibilidad de entrar en una crisis financiera. Así, sería factible tomar medidas correctivas complementarias u otras previamente adoptadas para contribuir a moderar la crisis. La información de la crisis financiera ocurrida a finales de la década de los noventa se utilizó para contrastar la validez del modelo (contable y financiero). Los resultados permiten afirmar que dicha crisis pudo ser pronosticada desde finales de 1997, o sea un año antes de que se llevara a cabo la declaratoria de emergencia económica, generada por la gran vulnerabilidad financiera que estaba registrando el sistema bancario colombiano.
+
+En recientes reuniones de la Conferencia Estadística de las Américas de la CEPAL, Colombia ha planteado la necesidad de disponer de indicadores de alertas tempranas y de cumplir los Principios Fundamentales de las Estadísticas Oficiales tanto en el marco de la crisis económica y financiera de 2008 como en la coyuntura, pues, por ejemplo la falta de dichas alertas tempranas no permitió advertir la crisis financiera de 2008-2009 CEPAL (2014). 
+
+\section{Metodologia}
+
+En el año de 1960 Kalman propuso el uso de los llamados Modelos de Espacio de los Estados (MEE), los cuales inicialmente se aplicaron a la ingeniería aero espacial (hizo parte del sistema guía del programa Apollo) y posteriormente su aplicación se extendió a muchas otras disciplinas tales como la salud y la economía, En su aplicación inicial se trataba de determinar la posición de un objeto en un tiempo determinado, conociendo de antemano su posición en un tiempo anterior y la potencia con que se movia dicho objeto, de tal manera que conocida esta información se disponía de dos ecuaciones entrelazadas, una ecuación que proporcionaba el estado del objeto asociado con su potencia o velocidad y otra ecuación que daba cuenta de su posición en el espacio.
+
+Un modelo de espacio de los estados es un modelo versatil que describe la dinámica de variables medidas a través del tiempo con aplicación práctica para describir comportamientos para variables tales como las economicas entre otras. La fortaleza de este modelo consiste en la determinación de componentes no observables, latentes en las series y que rigen el comportamiento de las mismas. Otra de las ventajas con el empleo de este tipo de modelos es la optimización de tiempo de procesamiento, utilización de recursos y versatilidad del mismo.
+Los modelos de espacio de los estados frente a los modelos Arima presentan algunas ventajas: los modelos Arima pueden formularse en el espacio de los estados Harvey (1989) y Hamilton (1994), los modelos de espacio de los estado admiten una representación del tipo Arima y adicionalmente cuando las series de tiempo tienen estructura subyacente simple las dos formulaciones son en esencia las mismas, Durbin y Koopman (2001).
+
+En consideración a lo anterior el proposito de este trabajo se alcanzará con en la utilización del modelo descrito anteriormente, incorporandole como insumos los indicadores propuestos para cada uno de los móculos del modelo CAMEL seleccionado.
+
+\subsection{Modelos dinámicos lineales}
+
+Los denominados modelos de espacio estado o modelos dinámicos lineales (DLM) por sus siglas en inglés, constan básicamente de dos ecuaciones, entrecruzadas entre si, una ecuación de observación o de medida que representa la relación que existe entre las observaciones o datos observados, y el estado acutal de los componenetes que son no observados; y la denominada ecuación del sistema o de transición que describe, mediante una ecuación de tipo markoviano de primer orden, la forma en que los componentes no observados evoluciónan estocásticamente a lo largo del tiempo.
+
+\begin{equation}
+y_{t} = A_{t} x_{t} + \Upsilon u_{t} + \nu_{t}
+\end{equation}
+\begin{equation}
+x_{t} = \Phi_{t} x_{t-1} + \Gamma u_{t} + \omega_{t}
+\end{equation}
+
+En donde $\nu_{t}\sim N(0,Q)$, $\omega_{t}\sim N(0,R)$, $\nu$ y $\omega$ son no correlacionados, y $u_{t}$ es un vector de covariables. $A_{t}$ es una matrix denominada de estado o de transición,las matrices del sistema y de covarianzas dependen en general de un conjunto de hiperparametros desconocidos que deberán ser estimados. El modelo de espacio de los estados tiene dos supuestos básicos:
+
+\begin{enumerate}
+  \item Un supuesto débil que puede ser abandonado $x_{0} \sim N(\hat{x}_{0|0},\hat{P}_{0|0})$.
+  \item Las covarianzas $Cov(\nu_{t},\omega_{t})$, $Cov(\nu_{t},x_{0})$ y $Cov(x_{0},\omega_{t})$ son iguales a cero.
+\end{enumerate}
+
+Existen dos aspectos importantes, propios de los modelos de espacio de los estados, a considerar uno es la capacidad de producir estimaciones actualizadas para la señal del sistema del vector de estados y otro es que para un sistema lineal la representación no es única.
+
+\subsection{Estimación del modelo}
+
+Una vez establecida la representación de un modelo de espacio de los estados, un algoritmo conocido como el filtro de Kalman, puede ser usado como procedimiento recursivo que permite obtener inferencias sobre el vector de estados y las mediciones del sistema a través de las ecuaciones de pronóstico antes de observar $y_{t}$ y de actualización una vez éste ha sido observado.
+
+\subsubsection{Ecuaciones de pronóstico}
+
+Suponga que en algún tiempo $t$ la información $D_{t}$ es observada y que los estados $x_{1},x_{2},\ldots,x_{t-1}$ son desconocidos. Suponga además que $\hat{x}_{t-1|t-1}$ es el mejor estimador de $x_{t-1}$. En el tiempo $t-1$ las ecuaciones de pronóstico vienen dadas por:
+
+\begin{align}
+\hat{x}_{t|t-1} &= E(x_{t}|D_{t-1})\\ 
+                &= \Phi_{t}\hat{x}_{t-1|t-1} + \Upsilon u_{t}
+\end{align}
+\begin{align}
+P_{t|t-1} &= V(x_{t}|D_{t-1})\\ 
+          &= \Phi P_{t-1|t-1}\Phi^{t} + Q
+\end{align}
+
+De la misma forma se llega a las ecuaciones de pronóstico para la ecuación de observación siguientes:
+
+\begin{align}
+\hat{y}_{t|t-1} &= E(y_{t}|D_{t-1})\\ 
+                &= A_{t}\hat{x}_{t|t-1} + \Gamma u_{t}
+\end{align}
+\begin{align}
+F_{t|t-1} &= V(y_{t}|D_{t-1})\\ 
+           &= \Phi_{t}P_{t|t-1}\Phi_{t}^{t} + R
+\end{align}
+
+\subsubsection{Ecuaciones de actualización y de equilibrio}
+
+Antes de que $y_{t}$ sea observado la inferencia sobre el vector de estados se basa en la distribución de $P(x_{t}|D_{t-1})$ una vez que es observado, un error de mínimo error cuadrático medio dado por $E(x_{t}|D_{t-1})$ obtenido a través de propiedades de la distribución normal multivariada, entonces las ecuaciones de actualización pueden ser redefinidas por:
+
+\begin{align}
+\hat{x}_{t|t} &= E(x_{t}|D_{t})\\ 
+              &= \hat{x}_{t|t-1} +P_{t|t-1} \Phi_{t}^{t}F_{t|t-1}^{-1}({y}_{t}  - \hat{y}_{t|t-1})
+\end{align}
+\begin{align}
+P_{t|t} &= V(x_{t}|D_{t-1})\\ 
+        &= P_{t|t-1}-P_{t|t-1}A_{t}^{t}F_{t|t-1}^{-1}A_{t}P_{t|t-1}
+\end{align}
+
+Y es entonces través de las ecuaciones anteriores que se conocen como el filtro de Kalman se llega a la siguiente expresión.
+
+\begin{align}
+P_{t+1|t} &= \Phi_{t}(P_{t|t-1}-P_{t|t-1}A_{t}^{t}F_{t|t-1}^{-1}A_{t}P_{t|t-1})\Phi_{t}^{t} + Q
+\end{align}
+
+Según Harvey (1989) el filtro de Kalman se considera invariante en el tiempo si su matriz de covarianzas también lo es, es decir, $P_{t+1|t} = P$.
+
+\subsubsection{Suavizado del filtro}
+
+Luego de aplicar el filor de Kalman es posible tomar en cuenta la información posterior a $t$, lo que significa actualizarlo usando la información para toda la muestra. Este procedimiento se conoce como suavizado y su correspondiente estimador ajustado deberá tener menor error cuadrático medio ya que incorpora la información completa Trujillo (2007).
+
+Un procedimiento de tipo recursivo inicializando en el tiempo $T$ es conocido como suavizado en intervalos fijos Harvey (1989), en donde $P_{t}^{*} = P_{t|t}A^{t}P_{t|t-1}^{-1}$ y que produce estimaciones recursivas hacia atrás en modelos gaussianos esta definida por:
+
+\section{Metodología CAMEL}
+
+\subsection{Indicadores financieros propuestos}
+
+\subsubsection{Relación de Solvencia}
+
+Es un indicador normativo establecido por el regulador (SFC), mide el grado de respaldo patrimonial que un banco mantiene frente a los activos en riesgo. Se define como el patrimonio técnico sobre los activos ponderados por nivel de riesgo mas el riesgo de mercado.
+
+\subsubsection{Exposición Patrimonial por Calificación de Riesgo}
+
+Mide el grado de compromiso o exposición del patrimonio con respecto a los activos improductivos (aquellos que no generan ingresos). A manera de liustración lo sucedido con la entrega de bienes inmuebles en la crisis de fin de siglo llevaron a insolventar los bancos afectando principalmente a las Corporaciones de Ahorro y Vivienda (CAV) que luego se convirtieron en bancos comerciales o fueron absorvidads por sus casas matrices, sus mayores accionistas, también bancos comerciales; ejemplo de ello es el Banco de Colombia que abosrbió a Conavi para evitar dejarlo como banco comercial y  su competidor, además de cumplir con la norma impuesta a la fecha; incorporando el negocio de cartera hipotecaria o de crédito hipotacario al Banco accionista.
+
+\subsubsection{Exposición Patrimonial por Altura de Mora}
+
+Similar al anterior incluye la cartera por altura mora. Es de notar que los indicadores por altura de mora son el parametro principal para determinar sus contrapartes por calificación.
+
+\subsubsection{Estructura del Balance por Calificación del Riesgo}
+
+Corresponde con el cociente de los activos productivos o todos aquellos activos que generan ingresos tales como la cartera que es productiva (la que produce interesés), las inversiones o las aceptaciones bancarias (letras de cambio) sobre los pasivos con costo que son los que generan costos (las cuentas de ahorro, los certificados de deposito a termino CDT y los creditos de otras entidades entre otros). Lo que busca este indicador es que por cada peso en el pasivo (que se deba) se debe tener como mínimo el mismo peso mas entre diez y treinta centavos adicionales en el activo. Es un indicador recomendable, pues, hoy en día la cartera revelada en los balances es la que se tiene por calificación de riesgo.
+
+\subsubsection{Estructura del Balance por Altura de Mora}
+
+Es el mismo indicador anterior, pero incluye la cartera por altura de mora, las demas cuentas cuentas involucradas permanecen invariables. Después de treinta dias toda cartera se considera vencida, Circular externa 100 de la Superintendencia Financiera de Colombia (1995). 
+
+\subsubsection{Rentabilidad sobre el Activo}
+
+Mide la forma en que son usados los activos para generar ingresos o utilidad. Con respecto a los bienes del negocio, la cartera y las inversiones constituyen la mayor proporción de los activos de un banco.
+
+\subsubsection{Rentabilidad sobre el Patrimonio}
+
+Medida de interés para los accionistas, mide la rentabilidad sobre las inversiones para determinar el beneficio derivado del negocio. Un administrador debe propender por mantener el indicador alto para que resulte atractivo a los inverionistas.
+
+\subsubsection{Abosrción del Margen Financiero}
+
+Medida de gerencia (management) y riesgo, corresponde a los gastos administrativos y de personal mas las provisiones: como ejemplo de gastos administrativos se tienen los gastos de papelería, arrendamiento, vigilancia, impuestos y timbre entre otros; como ejemplo de dastos de personal están aquellos estrictamente lo relacionados con el pago de la nómina tales como cesantías o las vacaciones sobre el margen financiero que es el neto, es decir, ingresos menos egresos derivados directamente de la actividad de intermandiación del banco (intermediar entre sectores superavitarios y los que tienen demanda por estos superavits).
+
+Es una excelente medida de riesgo, pues, incorpora las proviciones asociadas con el riesgo derivado del tipo de especialización del banco (ejemplo una cartera de consumo es mas riesgosa y menos amparada que una hipotecaria, por lo que se torna mas costosa en terminos de provisiones).
+
+\subsubsection{Calidad de la Cartera por Calificación de Riesgo}
+
+Indicador lider de riesgo para el sector, derivado de la actividad principal de un banco que es colocación de crédito. Se define como la cartera calificada por nivel de riesgo (B, C, D y E) sobre la cartera bruta que corresponde a la cartera total sin descontar provisiones.
+
+\subsubsection{Calidad de la Cartera por Altura de Mora}
+
+Coresponde a la cartera con mas de treinta dias de vencida sobre la cartera bruta.
+
+\subsubsection{Cobertura de la Cartera por calificación de Riesgo}
+
+Mide el nivel de protección para los créditos con mayor riesgo; son las provisiones de la cartera sobre la cartera vencida, es decir, las provisiones constituidas para la cartera calificda en B, C, D y E sobre la cartera calificada en B, C, D y E, puede ser calculado considerando las provisiones totales de la cartera que incluyen las provisiones contraciclicas.
+
+\subsubsection{Cobertura de la Cartera por Altura de Mora}
+
+
+\subsubsection{Liquidez}
+
+Mide la proporciòn de activos lìquidos para responder ante las exgibilidades del público.
+
+\subsubsection{Quebranto Patrimonial}
+
+Se define como la relación entre el patrimonio sobre el capital suscrito y pagado mas el capital garantía. Por norma no debe ser inferior al cincuenta por ciento. Este indicador es de carácter normativo pero en la realidad, dada la estructura patrimonial de algunos bancos, su nivel es demasiado alto y no aporta en el análisis del sector bancario.
+
+\subsection{Indicadores por altura de mora}
+
+En relación a los indicadores por altura de mora se observan asociaciones positivas entre la absorción del margen financiero, la calificación de la cartera y la exposición patrimonial esto puede ser explicado a la naturaleza de los indicadores pues estos miden , la calificación de la cartera con la exposición patrimonial, la cobertura de la cartera y la estructura de balance, el indicador de liquidez con la relación de solvencia y los rendimientos sobre activos y pasivos, la estructura de balance con la liquidez, la relación de solvencia y los renidimientos sobre activos y pasivos, la liquidez con la relación de solvencia y los rendimientos sobre activos y pasivos, la relación de solvencia y los rendimientos sobre los activos y pasivos, y los rendimientos sobre activos y pasivos.
+
+Con relación a las correlaciones es de anotar que todas resultan ser superiores a 0.5 salvo las que existen entre la calidad de la cartera por altura de mora y la liquidez, la cobertura de la cartera y la liquidez, la estructura del balance por altura de mora y la liquidez, la estructura patrimonial por altura de mora y la liquidez, la liquidez y la relación de solvencia, la liquidez y la relación de solvencia, y la relación de solvencia y los rendimientos sobre los pasivos.
+
+\subsection{Indicadores por calificación de riesgo}
+
+En cuanto a los indicadores por calificación de riesgo se observan correlaciones positivas entre los indicadores asociados a la absorción del margen financiero, la calidad de la cartera y la estructura patrimonial; la calidad de la cartera y la exposición patrimonial; la cobertura de la cartera, la estructura del balance, la líquidez, la relación de solvencia y los rendimientos sobre los activos y pasivos; la estructura del balance, la liquidez, la relación de solvencia y los rendimientos sobre activos y pasivos; la liquidez y la relación de solvencia y los rendimientos sobre activos y pasivos; la relación de solvencia y los renidmientos sobre activos y pasivos; y los rendimientos sobre activos y pasivos.
+
+Con relación a las correlaciones, en lo que respecta a la calificación por riesgo, se encuentra que todas son al menos  superiores a 0.5 salvo: la calificación de la cartera y la liquidez; la cobertura de la cartera y la liquidez; la estructura del balance y la líquidez; la exposición patrimonial y la liquidez, la liquidez y la relación de solvencia; la relación de solvencia y los rendimientos sobre activos y pasivos.
+
+\section{Resultados}
+
+\subsection{Cronologia de la actividad financiera en Colombia}
+
+Desde comienzos de 1990, al ponerse en marcha la apertura económica, se registró una importante entrada de capitales al país que generó un exceso de liquidez, que unido al importante crecimiento de la demanda agregada y del PIB, desencadenó en un incremento del crédito en la economía Colombiana. Desde 1993 el crecimiento de la cartera bruta alcanzó niveles cercanos al 70\% nominal, mientras que las tasas de interés reales permanecían relativamente estables con tendencia a la baja. En este contexto, se generó un ambiente de competencia en la oferta de crédito lo que condujo a que se relajaran las prácticas prudenciales y los intermediarios tomaran riesgos excesivos e innecesarios3, que tuvieron un control tardío por parte de los organismos de supervisión y regulación. 
+
+Entre 1994 y mediados de 1996, el incremento de la demanda por recursos financieros especialmente para crédito comercial y de consumo, tuvo efectos positivos sobre el precio de la finca raíz y los activos financieros (títulos de renta variable) generando una burbuja especulativa. Este factor, aunado a la política de incrementar las tasas de interés para reducir la inflación, incidió negativamente sobre la demanda agregada haciendo poco rentables las inversiones del sector real y beneficiando la demanda de dinero especulativo con directa incidencia en el aumento de los niveles de riesgo. En consecuencia, desde finales de 1996 hubo una presión hacia la baja en el valor presente de las empresas y en el ahorro de las familias, afectando aún más la demanda agregada y elevando el valor de los créditos a los deudores.
+ 
+El sector financiero colombiano desde comienzos de 1998, evidenció hechos tales como la reducción en términos reales de los depósitos, asociada posiblemente a la pérdida de confianza por parte del público en mantener activos denominados en pesos. La situación más dramática la tuvieron las Corporaciones de Ahorro y Vivienda (CAV), con excepción de Granahorrar y el Banco Central Hipotecario, que recibieron apoyos del Gobierno en forma de capitalizaciones a mediados de 1999. En general, la tasa anual de captaciones del sector financiero, incluyendo depósitos en cuenta corriente, depósitos de ahorro y certificados de depósitos a término, pasó del 20\% a comienzos de 1997 a menos del 5\% en el año 2000. La cartera bruta después de un crecimiento del 28\% a finales de 1997, disminuyó al 9,5\% en el 2000 y la cartera vencida del total del sistema financiero que en 1997 sumaba 3,2 billones, ascendió a 7 billones al finalizar l999. El mayor deterioro de la cartera hacia el año 2000 lo tuvieron los bancos públicos (35\%), las CAV (21\%) y las corporaciones financieras (22\%). En las CAV la situación se vio agravada por el elevado porcentaje de cartera hipotecaria, cercano al 79\% del total. Ante la imposibilidad de los empresarios de cancelar sus créditos y en ausencia de previsiones por parte de los intermediarios financieros los primeros debieron refinanciar sus deudas.
+ 
+Vale la pena destacar que entre 1997 y 1999 la relación de solvencia del sistema financiero consolidado inició una etapa de descenso, después de haber logrado su punto más alto a comienzos de 1997. En efecto, la relación de solvencia pasó del 13,4\% en 1997 al 10,7\% en 1998 y posteriormente tuvo una leve mejora en 1999 con un 11,2\%. A pesar del repunte de la solvencia en la banca privada a comienzos de 1999, el promedio se vio afectado por la banca pública debido a los fuertes cambios en las provisiones. 
+
+En este orden de ideas, el deterioro de la economía colombiana tuvo parte en la desmejora de los indicadores del sector financiero, reflejándose principalmente en el rápido crecimiento de los activos improductivos, especialmente cartera vencida y bienes recibidos en pago, durante los años 1998 y 1999, comprometiendo el patrimonio de las entidades financieras y disminuyendo la rentabilidad de la operación bancaria.
+ 
+En consecuencia, a partir de 1999 se dieron casi de manera simultánea operaciones de salvamento de la banca pública, intervención financiera y saneamiento de los balances, que se materializaron en capitalizaciones de bancos públicos y apoyos de liquidez a bancos privados; operaciones de fusión de entidades, orden de liquidación forzosa administrativa de entidades y castigo de activos improductivos, o la venta de los mismos a la Central de Inversiones -CISA-.
+
+En el cuadro inferior se ilustra la composición del sector para periodos previos y posteriores a la crisis presentada a finales de los años 90 en Colombia:
+
+<<codigo1, echo=FALSE,message=FALSE>>=
+library(Matrix)
+library(lme4)
+library(Rcpp)
+library(nlme)
+library(xtable)
+library(plyr)
+library(ggplot2)
+library(lattice)
+library(Matrix)
+library(lme4)
+library(nlme)
+library(astsa)
+library(dlmodeler)
+library(dse)
+library(xtable)
+@
+
+<<results = tex, echo = F>>=
+library(xtable)
+col.names <- c('1995', '1999', '2004', '2005', '2006')
+row.names <- c('Bancos', 'CAV', 'CF', 'CFC', 'Generales', 'Leassing', 'Otras entidades', 'AFP', 'Fiduciarias')
+out <- matrix(c(32, 25, 21, 19, 17, 10, 6, 7, 1, 1, 24, 10, 4, 2, 2, 74, 40, 25, 25, 24, 31, 21, 15, 15, 15, 43, 19, 10, 10, 9, 61, 45, 36, 34, 33, 14, 8, 5, 6, 6, 47, 37, 21, 28, 27), nrow = 9, byrow = T)
+colnames(out) <- col.names
+rownames(out) <- row.names
+xtable(out, digits = 0, caption = 'Número de entidades del sector financiero en Colombia')
+@
+
+<<echo=F>>=
+#  Lectura de datos
+Datos<-read.csv ("F:/Tesis/IndicadoresActualizados.txt",header=TRUE,dec=",",sep="\t")
+@
+
+<<echo=F>>=
+#Selección de los indicadores mas representativos
+y = cbind(Datos$CodCxAdM, 1/Datos$CadCxAdM, Datos$RdS, Datos$ROE, 1/Datos$AdMF, 1/Datos$EPxAdM)
+@
+
+<<echo=F>>=
+Y <- ts(scale(y), start=c(1996,12), frequency=12)
+colnames(Y) <- c("CodCxAdMC", "CadCxAdMIC", "RdSC", "ROEC", "AdMFIC", "EPxAdMIC")
+@
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+plot.ts(Y, plot.type = "m", col=c("blue", "red", "green", "magenta", "orange", "brown"), main="")
+@
+\end{center}
+\caption{Indicadores financieros}
+\end{figure}
+
+<<echo=F,results=hide>>= 
+#Establece el numero de iteraciones del DLM
+num = nrow(Y)
+#Entrada del modelo, variable independiente
+input = rep(1,num)
+#Matriz de diseño
+A = array(rep(1,6), dim=c(6,1,num))
+#Valores iniciales para la media y la varianza del estado del proceso
+mu0 = -.26; Sigma0 = .001;  Phi = 1
+# Función para calcular la máxima verosimilitud 
+Linn=function(para){
+  cQ = para[1]      # sigma_w
+  cR = diag(0,6)
+  cR[1,1] = para[2]    # 11 element of chol(R)
+  cR[2,2] = para[3]    # 22 element of chol(R)
+  cR[3,3] = para[4]    # 11 element of chol(R)
+  cR[4,4] = para[5]    # 22 element of chol(R)
+  cR[5,5] = para[6]    # 11 element of chol(R)
+  cR[6,6] = para[7]    # 11 element of chol(R)
+  drift = para[8]
+  kf = Kfilter1(num,Y,A,mu0,Sigma0,Phi,drift,0,cQ,cR,input)
+  return(kf$like) 
+}
+# Parametros iniciales
+init.par = c(.001,.001,.001,.001,.001,.001,.001,.0005)  # initial values of parameters
+#Estimación por máxima verosimilitud
+(est = optim(init.par, Linn, NULL, method="BFGS", hessian=TRUE, control=list(trace=0,REPORT=1))) 
+#Estimación de las varianzas de los parametros estimados
+SE = sqrt(diag(solve(est$hessian))) 
+# Summary of estimation 
+estimate = est$par; u = cbind(estimate, SE)
+rownames(u)=c("sigw","cR11", "cR22", "cR33", "cR44", "cR55", "cR66", "drift"); u  
+@
+
+<<echo=F,results=tex>>=
+xtable(u,"Parámetros estimados")
+@
+
+<<echo=F,results=hide>>=
+# Smooth (first set parameters to their final estimates)
+cQ=est$par[1]  
+cR = diag(0,6)
+cR[1,1] = est$par[2]
+cR[2,2] = est$par[3]
+cR[3,3] = est$par[4]
+cR[4,4] = est$par[5]
+cR[5,5] = est$par[6]
+cR[6,6] = est$par[7]
+(R = t(cR)%*%cR)    #  to view the estimated R matrix
+drift = est$par[8]  
+ks = Ksmooth1(num,Y,A,mu0,Sigma0,Phi,drift,0,cQ,cR,input)  
+@
+
+<<echo=F,results=hide>>=
+# Plot 
+xsmooth = ts(as.vector(ks$xs), start=c(1996,12), frequency=12)
+
+CodCxAdMC = ts(as.vector(scale(Datos$CodCxAdM)), start=c(1996,12), frequency=12)
+CadCxAdMIC = ts(as.vector(scale(1/Datos$CadCxAdM)), start=c(1996,12), frequency=12)
+RdSC = ts(as.vector(scale(Datos$RdS)), start=c(1996,12), frequency=12)
+ROEC = ts(as.vector(scale(Datos$ROE)), start=c(1996,12), frequency=12)
+AdMFIC = ts(as.vector(scale(1/Datos$AdMF)), start=c(1996,12), frequency=12)
+EPxAdMIC = ts(as.vector(scale(1/Datos$EPxAdM)), start=c(1996,12), frequency=12)
+@
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+ts.plot(xsmooth, lwd=2, ylim=c(min(xsmooth),max(xsmooth)), ylab="Indicadores financieros")
+lines(CadCxAdMIC, col="red", lty=2)
+lines(CodCxAdMC, col="blue", lty=2)     # color helps here
+lines(RdSC, col="green", lty=2)
+lines(ROEC, col="magenta", lty=2)
+lines(AdMFIC, col="orange", lty=2)
+lines(EPxAdMIC, col="brown", lty=2)
+legend('bottomright', c("SdSBeC","CodCxAdMC","CadCxAdMIC","RdSC","ROEC","AdMFIC","EPxAdMIC"), col=c("black","blue","red","green","magenta","orange","brown"), lty=c(1,2,2,2,2,2,2), lwd=c(2,1,1,1,1,1,1))
+@
+\end{center}
+\caption{Señal del sector bancario colombiano}
+\end{figure}
+
+<<echo=F,results=hide>>=
+#  Lectura de indicadores
+IMACO <- read.csv ("F:/Tesis/IMACO.txt",header=TRUE,dec=",",sep="\t")
+pib <- ts(as.vector(IMACO$PIB), start=c(1996,12), frequency=12)
+IPI <- read.csv ("F:/Tesis/IPI.txt",header=TRUE,dec=",",sep="\t")
+ipi <- ts(as.vector(IPI$IPI), start=c(1996,12), frequency=12)
+@
+
+
+
+<<echo=F,results=hide>>=
+#Construccipon del modelo como suma de un modelo polinomial mas uno estacional de orden doce
+mod <- dlmodeler.build.polynomial(3,sigmaH=NA)+dlmodeler.build.dseasonal(12,sigmaQ=c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
+#Ajuste del modelo por máxima verosimilitud
+fit <- dlmodeler.fit(ipi,mod,method="MLE")
+#criterio de akaike
+AIC(fit)
+#Parámetro ajustado de la varianza del estado
+fit$model$Ht[1,1]
+#Parámetros ajustados de la varianza de la señal
+fit$model$Qt[1,1]
+fit$model$Qt[2,2]
+fit$model$Qt[3,3]
+fit$model$Qt[4,4]
+fit$model$Qt[5,5]
+
+#Filtrado del IPI mediante el modelo propuesto
+f <- dlmodeler.filter(ipi,fit$model,smooth=TRUE)
+#Extracción de los valores ajustados del filtro
+f.ce <- dlmodeler.extract(f,fit$model,type="observation",value="mean")
+#Extracción de los valores ajustados del suavizado
+s.ce <- dlmodeler.extract(f$smooth,fit$model,type="observation",value="mean")
+#Gráfico del IPI
+ts.plot(ipi, lwd=2, ylim=c(min(ipi),max(ipi)), ylab="Índice de Producción Industrial")
+f.ce$'polynomial' <- ts(f.ce$'polynomial'[1,],frequency=12, start=c(1996,12))
+lines(f.ce$'polynomial',col="dark green",lty=2)
+s.ce$'polynomial' <- ts(s.ce$'polynomial'[1,],frequency=12, start=c(1996,12))
+lines(s.ce$'polynomial',col="dark blue",lty=2)
+ts.plot(ipi-s.ce$'polynomial', lwd=2, ylim=c(min(ipi-s.ce$'polynomial'),max(ipi-s.ce$'polynomial')), ylab="Indicadores financieros")
+f.ce$'dseasonal' <- ts(f.ce$'dseasonal'[1,],frequency=12, start=c(1996,12))
+lines(f.ce$'dseasonal',col="dark green",lty=2)
+s.ce$'dseasonal' <- ts(s.ce$'dseasonal'[1,],frequency=12, start=c(1996,12))
+lines(s.ce$'dseasonal',col="dark blue",lty=2)
+prob <- 0.5
+output.intervals <- dlmodeler.extract(f,fit$model,type="observation",value="interval",prob=prob)
+ts.plot(ipi, lwd=2, ylim=c(min(ipi),max(ipi)), ylab="Indicadores financieros")
+output.intervals$'polynomial'$lower <- ts(output.intervals$'polynomial'$lower[1,],frequency=12, start=c(1996,12))
+lines(output.intervals$'polynomial'$lower,col="light green",lty=2)
+output.intervals$'polynomial'$mean <- ts(output.intervals$'polynomial'$mean[1,],frequency=12, start=c(1996,12))
+lines(output.intervals$'polynomial'$mean,col="dark green",lty=2)
+output.intervals$'polynomial'$upper <- ts(output.intervals$'polynomial'$upper[1,],frequency=12, start=c(1996,12))
+lines(output.intervals$'polynomial'$upper,col="light green",lty=2)
+s <- dlmodeler.smooth(f,fit$model)
+s.obs.mean <- dlmodeler.extract(s,fit$model,type="state",value="interval",prob=prob)
+ts.plot(ipi, lwd=2, ylim=c(min(ipi),max(ipi)), ylab="Indicadores financieros")
+s.obs.mean$'polynomial'$lower <- ts(s.obs.mean$'polynomial'$lower[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'polynomial'$lower,col="light green",lty=2)
+s.obs.mean$'polynomial'$mean <- ts(s.obs.mean$'polynomial'$mean[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'polynomial'$mean,col="dark green",lty=2)
+s.obs.mean$'polynomial'$upper <- ts(s.obs.mean$'polynomial'$upper[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'polynomial'$upper,col="dark green",lty=2)
+ts.plot(ipi, lwd=2, ylim=c(min(ipi),max(ipi)), ylab="Indicadores financieros")
+s.obs.mean$'dseasonal'$lower <- ts(s.obs.mean$'dseasonal'$lower[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'dseasonal'$lower,col="light green",lty=2)
+s.obs.mean$'dseasonal'$mean <- ts(s.obs.mean$'dseasonal'$mean[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'dseasonal'$mean,col="dark green",lty=2)
+s.obs.mean$'dseasonal'$upper <- ts(s.obs.mean$'dseasonal'$upper[1,],frequency=12, start=c(1996,12))
+lines(s.obs.mean$'dseasonal'$upper,col="dark green",lty=2)
+@
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+ts.plot(ipi, lty=1, ylim=c(min(ipi),max(ipi)), ylab="Indicadores financieros")
+#lines(s.obs.mean$'dseasonal'$lower,col="light green",lty=2)
+lines(ipi - s.obs.mean$'dseasonal'$mean,col="dark green",lty=2)
+#lines(s.obs.mean$'dseasonal'$upper,col="dark green",lty=2)
+@
+\end{center}
+\caption{Desestacionalización del índice de producción industrial}
+\end{figure}
+
+
+<<echo=F,results=hide>>=
+#ts.plot(ipi - s.obs.mean$'dseasonal'$mean,col="dark green",lty=2)
+IPI <- ipi - s.obs.mean$'dseasonal'$mean
+@
+
+
+<<echo=F,results=hide>>=
+#Concatena los datos para ser modelados y centra el IPI desestacionalizado
+y = cbind(xsmooth, pib, scale(IPI))
+#Se crea la base de datos necesaria para modelar
+Y <- TSdata(input=NULL, output=y[,1:3])
+@
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+tfplot(Y)
+@
+\end{center}
+\caption{Señales de los sectores}
+\end{figure}
+
+
+
+<<echo=F,results=hide>>=
+#Estima el modelo VAR
+model <- estVARXar(Y)
+#
+@
+
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+tfplot(model)
+@
+\end{center}
+\caption{Modelo VAR(3)}
+\end{figure}
+
+<<echo=F,results=hide>>=
+stability(model)
+informationTests(model)
+@
+
+<<echo=F,results=hide>>=
+pr <- forecast(model, conditioning.inputs=inputData(Y))
+#tfplot(pr) Rbug 0.90.1
+is.forecast(pr)
+w <- as.matrix(informationTestsCalculations(model)[,1:7])
+colnames(w) <- c("Valor")
+@
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+tfplot(pr)
+@
+\end{center}
+\caption{Pronosticos del modelo VAR(3)}
+\end{figure}
+
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+shockDecomposition(model)
+@
+\end{center}
+\caption{Funciones de impulso respuesta para el modelo VAR(3)}
+\end{figure}
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+plot(roots(model))
+addPlotRoots(toSS(model))
+@
+\end{center}
+\caption{Raices del modelo VAR(3)}
+\end{figure}
+
+<<echo=F,results=tex>>=
+xtable(w,"Criterios de información")
+@
+
+<<echo=F,results=hide>>=
+pr <- forecast(model, conditioning.inputs=inputData(Y))
+#tfplot(pr) Rbug 0.90.1
+is.forecast(pr)
+@
+
+
+\begin{figure}[!h]
+\begin{center}
+<<fig = T, width = 7, height = 7, echo = F>>=
+# whatever you want to plot goes here (one plot at a time!)
+checkResiduals(model)
+@
+\end{center}
+\caption{Verificación de supuestos del modelo VAR(3)}
+\end{figure}
+
+\section{State space and ARMA models an overview of the equivalence 1993 Paul Gilbert}
+
+El interés en la representación de espacio de estado viene de por lo menos tres aspectos.
+
+\begin{enumerate}
+  \item La primera es que puede haber algunas ventajas para la estimación del modelo (en particular, para la reducción de modelo como se discute en Aoki 1990; Aoki y Havenner 1991; Mittnik 1991, y Vaccaro y Vukina 1993 ).
+  \item La segunda es que el modelo estima explícitamente un estado subyacente que resume el proceso. Este estado subyacente puede ser de su interés teórico significativo.
+  \item La tercera es que las ideas de la teoría de control se pueden aplicar.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hola \cite{ShumwayStoffer2006}
+
+\cite{DurbinKoompan2001}
+
+\printbibliography
+
+\end{document}
